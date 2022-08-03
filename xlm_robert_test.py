@@ -157,10 +157,10 @@ args = TrainingArguments(
     num_train_epochs=3,
     weight_decay=0.01,
     push_to_hub=False,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=4*2*2*2*2*2*2*2*2*2*2*2,
-    gradient_checkpointing=True, 
-    fp16=True,
+    #per_device_train_batch_size=1,
+    #gradient_accumulation_steps=4*2*2*2*2*2*2*2*2*2*2*2,
+    #gradient_checkpointing=True, 
+    #fp16=True,
 )
 
 #good?
