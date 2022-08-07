@@ -150,13 +150,13 @@ model = AutoModelForTokenClassification.from_pretrained(
 )
 
 args = TrainingArguments(
-    "xlm-r-finetuned-ner",
+    "finetuned-xlm-r-masakhaner-swa-ner",
     evaluation_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
-    num_train_epochs=10,
+    num_train_epochs=20,
     weight_decay=0.01,
-    push_to_hub=False,
+    push_to_hub=True,
     save_total_limit=3,
     #per_device_train_batch_size=1,
     #gradient_accumulation_steps=4*2*2*2*2*2*2*2*2*2*2*2,
