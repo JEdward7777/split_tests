@@ -11,14 +11,24 @@ import numpy as np
 import sys
 
 epoch_flag = False
+checkpoint_flag = False
+publish = True
 epochs = 20
+model_checkpoint = 'xlm-roberta-base' #"distilbert-base-uncased"
 print( "start" )
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
         epoch_flag = False
+    elif checkpoint_flag:
+        model_checkpoint = arg
+        checkpoint_flag = False
     elif arg == "--epoch":
         epock_flag = True
+    elif arg == "--dont-publish":
+        publish = False
+    elif arg == "--checkpoint":
+        checkpoint_flag = True
     else:
         print( f"eh? {arg}" )
 print( f"end {sys.argv}")
@@ -26,7 +36,6 @@ print( f"end {sys.argv}")
 
 # #following along https://huggingface.co/course/chapter7/3?fw=pt
 
-model_checkpoint = 'xlm-roberta-base' #"distilbert-base-uncased"
 # # model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
 
 # # distilbert_num_parameters = model.num_parameters() / 1_000_000
@@ -173,7 +182,7 @@ args = TrainingArguments(
     learning_rate=2e-5,
     num_train_epochs=epochs,
     weight_decay=0.01,
-    push_to_hub=True,
+    push_to_hub=publish,
     save_total_limit=3,
     #per_device_train_batch_size=1,
     #gradient_accumulation_steps=4*2*2*2*2*2*2*2*2*2*2*2,
@@ -211,6 +220,13 @@ def print_gpu_utilization():
 
 print_gpu_utilization()
 
-trainer.train()
+train_results = trainer.train()
+# rest is optional but nice to have
+trainer.save_model()
+trainer.log_metrics("train", train_results.metrics)
+trainer.save_metrics("train", train_results.metrics)
+trainer.save_state()
 
-pass
+#how to push https://huggingface.co/docs/transformers/model_sharing
+if publish:
+    trainer.push_to_hub()
