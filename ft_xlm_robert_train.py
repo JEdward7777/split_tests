@@ -99,6 +99,7 @@ model.resize_token_embeddings(len(tokenizer))
 #https://huggingface.co/docs/transformers/v4.21.1/en/tasks/language_modeling
 
 training_args = TrainingArguments(
+    'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
     output_dir="./results",
     evaluation_strategy="epoch",
     learning_rate=2e-5,
