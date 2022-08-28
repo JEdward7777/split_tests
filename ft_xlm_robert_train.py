@@ -6,16 +6,16 @@ import sys
 
 epoch_flag = False
 epochs = 20
-print( "start" )
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
+        print( f"epochs set to {epochs}")
         epoch_flag = False
     elif arg == "--epoch":
-        epock_flag = True
+        epoch_flag = True
     else:
         print( f"eh? {arg}" )
-print( f"end {sys.argv}")
+
 
 model_checkpoint = 'xlm-roberta-base'
 train_data_csv = 'swahili_cross_6000_trimmed.csv'
