@@ -1,3 +1,4 @@
 catboost_info/*
 __pycache__
 venv
+pypy_venv

@@ -81,4 +81,5 @@ def main(iterations):
     print( f"finished {test_name} with {iterations} iterations" )
 
 if __name__ == "__main__":
-    main( 8000 )
+    main( 4500 )
+    main( 6500 )

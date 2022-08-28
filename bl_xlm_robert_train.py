@@ -8,6 +8,21 @@ import torch
 from datasets import load_dataset
 import evaluate
 import numpy as np
+import sys
+
+epoch_flag = False
+epochs = 20
+print( "start" )
+for arg in sys.argv[1:]:
+    if epoch_flag:
+        epochs = int(arg)
+        epoch_flag = False
+    elif arg == "--epoch":
+        epock_flag = True
+    else:
+        print( f"eh? {arg}" )
+print( f"end {sys.argv}")
+    
 
 # #following along https://huggingface.co/course/chapter7/3?fw=pt
 
@@ -149,12 +164,14 @@ model = AutoModelForTokenClassification.from_pretrained(
     label2id=label2id,
 )
 
+
+
 args = TrainingArguments(
     "finetuned-xlm-r-masakhaner-swa-ner",
     evaluation_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
-    num_train_epochs=20,
+    num_train_epochs=epochs,
     weight_decay=0.01,
     push_to_hub=True,
     save_total_limit=3,
