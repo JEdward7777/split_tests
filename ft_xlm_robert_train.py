@@ -6,6 +6,7 @@ import sys
 
 epoch_flag = False
 epochs = 20
+just_tokenizer = False
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
@@ -13,6 +14,8 @@ for arg in sys.argv[1:]:
         epoch_flag = False
     elif arg == "--epoch":
         epoch_flag = True
+    elif arg == "--just-tokenizer":
+        just_tokenizer = True
     else:
         print( f"eh? {arg}" )
 
@@ -54,76 +57,78 @@ actual_added_tokens = tokenizer.add_tokens( new_tokens )
 #also need to push tokenizer.
 tokenizer.push_to_hub("finetuned-xlm-r-masakhaner-swa-whole-word-phonetic")
 
-tokenizer.pad_token = tokenizer.eos_token
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=0.15)
+if not just_tokenizer:
 
-def preprocess_function(examples):
-    return tokenizer([s for s in examples[selected_column] if s is not None and len(s)], truncation=True)
+    tokenizer.pad_token = tokenizer.eos_token
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=0.15)
 
-
-
-
-
-tokenized_phonetic_dataset = phonetic_dataset.map(
-    preprocess_function,
-    batched=True,
-    num_proc=4,
-    remove_columns=phonetic_dataset["train"].column_names,
-)
+    def preprocess_function(examples):
+        return tokenizer([s for s in examples[selected_column] if s is not None and len(s)], truncation=True)
 
 
-block_size = 128
-
-def group_texts(examples):
-    concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-    total_length = len(concatenated_examples[list(examples.keys())[0]])
-    total_length = (total_length // block_size) * block_size
-    result = {
-        k: [t[i : i + block_size] for i in range(0, total_length, block_size)]
-        for k, t in concatenated_examples.items()
-    }
-    result["labels"] = result["input_ids"].copy()
-    return result
 
 
-lm_dataset = tokenized_phonetic_dataset.map(group_texts, batched=True, num_proc=4)
 
-# pass
+    tokenized_phonetic_dataset = phonetic_dataset.map(
+        preprocess_function,
+        batched=True,
+        num_proc=4,
+        remove_columns=phonetic_dataset["train"].column_names,
+    )
 
-#Load up the split data
 
-model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
+    block_size = 128
 
-#resize to include new tokens.
-model.resize_token_embeddings(len(tokenizer))
+    def group_texts(examples):
+        concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
+        total_length = len(concatenated_examples[list(examples.keys())[0]])
+        total_length = (total_length // block_size) * block_size
+        result = {
+            k: [t[i : i + block_size] for i in range(0, total_length, block_size)]
+            for k, t in concatenated_examples.items()
+        }
+        result["labels"] = result["input_ids"].copy()
+        return result
 
-#train on downstream task of masked langauge modeling.
-#https://huggingface.co/docs/transformers/v4.21.1/en/tasks/language_modeling
 
-training_args = TrainingArguments(
-    'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
-    #output_dir="./results",
-    evaluation_strategy="epoch",
-    learning_rate=2e-5,
-    num_train_epochs=epochs,
-    weight_decay=0.01,
-    push_to_hub=True,
-)
+    lm_dataset = tokenized_phonetic_dataset.map(group_texts, batched=True, num_proc=4)
 
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=lm_dataset["train"],
-    eval_dataset=lm_dataset["test"],
-    data_collator=data_collator,
-)
+    # pass
 
-train_results = trainer.train()
-# rest is optional but nice to have
-trainer.save_model()
-trainer.log_metrics("train", train_results.metrics)
-trainer.save_metrics("train", train_results.metrics)
-trainer.save_state()
+    #Load up the split data
 
-#how to push https://huggingface.co/docs/transformers/model_sharing
-trainer.push_to_hub()
+    model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
+
+    #resize to include new tokens.
+    model.resize_token_embeddings(len(tokenizer))
+
+    #train on downstream task of masked langauge modeling.
+    #https://huggingface.co/docs/transformers/v4.21.1/en/tasks/language_modeling
+
+    training_args = TrainingArguments(
+        'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
+        #output_dir="./results",
+        evaluation_strategy="epoch",
+        learning_rate=2e-5,
+        num_train_epochs=epochs,
+        weight_decay=0.01,
+        push_to_hub=True,
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=lm_dataset["train"],
+        eval_dataset=lm_dataset["test"],
+        data_collator=data_collator,
+    )
+
+    train_results = trainer.train()
+    # rest is optional but nice to have
+    trainer.save_model()
+    trainer.log_metrics("train", train_results.metrics)
+    trainer.save_metrics("train", train_results.metrics)
+    trainer.save_state()
+
+    #how to push https://huggingface.co/docs/transformers/model_sharing
+    trainer.push_to_hub()
