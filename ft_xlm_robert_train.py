@@ -114,6 +114,7 @@ trainer = Trainer(
     train_dataset=lm_dataset["train"],
     eval_dataset=lm_dataset["test"],
     data_collator=data_collator,
+    push_to_hub=True,
 )
 
 trainer.train()
