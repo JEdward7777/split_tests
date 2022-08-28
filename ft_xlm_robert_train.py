@@ -51,6 +51,8 @@ for train_test in phonetic_dataset:
 actual_added_tokens = tokenizer.add_tokens( new_tokens )
 
 
+#also need to push tokenizer.
+tokenizer.push_to_hub("finetuned-xlm-r-masakhaner-swa-whole-word-phonetic")
 
 tokenizer.pad_token = tokenizer.eos_token
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=0.15)
@@ -116,7 +118,12 @@ trainer = Trainer(
     data_collator=data_collator,
 )
 
-trainer.train()
+train_results = trainer.train()
+# rest is optional but nice to have
+trainer.save_model()
+trainer.log_metrics("train", train_results.metrics)
+trainer.save_metrics("train", train_results.metrics)
+trainer.save_state()
 
 #how to push https://huggingface.co/docs/transformers/model_sharing
 trainer.push_to_hub()
