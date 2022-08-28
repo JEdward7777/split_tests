@@ -100,7 +100,7 @@ model.resize_token_embeddings(len(tokenizer))
 
 training_args = TrainingArguments(
     'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
-    output_dir="./results",
+    #output_dir="./results",
     evaluation_strategy="epoch",
     learning_rate=2e-5,
     num_train_epochs=epochs,
