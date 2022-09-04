@@ -123,6 +123,7 @@ if not just_tokenizer:
         num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=True,
+        save_total_limit=3,
     )
 
     trainer = Trainer(
