@@ -6,16 +6,24 @@ import sys
 
 epoch_flag = False
 epochs = 20
+learing_rate_flag = False
+learning_rate = 2e-5
 just_tokenizer = False
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
         print( f"epochs set to {epochs}")
         epoch_flag = False
+    elif learning_rate_flag:
+        learning_rate = float(arg)
+        print( f"learning rate set to {learning_rate}")
+        learning_rate_flag = False
     elif arg == "--epoch":
         epoch_flag = True
     elif arg == "--just-tokenizer":
         just_tokenizer = True
+    elif arg == "--learning-rate":
+        learning_rate_flag = True
     else:
         print( f"eh? {arg}" )
 
@@ -41,7 +49,7 @@ new_tokens = []
 for train_test in phonetic_dataset:
     for example in phonetic_dataset[train_test]:
         for word in example[selected_column].split( " " ):
-            
+
             # #by messing around I discovered that adding a space on the front of the token helps it work the same as the
             # #natrual tokens otherwise it kind of gets interperated as a subword.
             # word = ' ' + word
@@ -111,7 +119,7 @@ if not just_tokenizer:
         'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
         #output_dir="./results",
         evaluation_strategy="epoch",
-        learning_rate=2e-5,
+        learning_rate=learning_rate,
         num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=True,
