@@ -41,9 +41,11 @@ new_tokens = []
 for train_test in phonetic_dataset:
     for example in phonetic_dataset[train_test]:
         for word in example[selected_column].split( " " ):
-            #by messing around I discovered that adding a space on the front of the token helps it work the same as the
-            #natrual tokens otherwise it kind of gets interperated as a subword.
-            word = ' ' + word
+            
+            # #by messing around I discovered that adding a space on the front of the token helps it work the same as the
+            # #natrual tokens otherwise it kind of gets interperated as a subword.
+            # word = ' ' + word
+
             if word not in new_tokens:
                 new_tokens.append(word)
             #     print( f"Adding{word}")
