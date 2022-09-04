@@ -6,7 +6,7 @@ import sys
 
 epoch_flag = False
 epochs = 20
-learing_rate_flag = False
+learning_rate_flag = False
 learning_rate = 2e-5
 just_tokenizer = False
 for arg in sys.argv[1:]:
