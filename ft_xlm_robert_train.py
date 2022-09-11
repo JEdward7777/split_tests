@@ -8,7 +8,11 @@ epoch_flag = False
 epochs = 20
 learning_rate_flag = False
 learning_rate = 2e-5
+model_checkpoint = 'xlm-roberta-base'
+model_checkpoint_flag = False
 just_tokenizer = False
+save_total_limit = 3
+save_total_limit_flag = False
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
@@ -18,17 +22,26 @@ for arg in sys.argv[1:]:
         learning_rate = float(arg)
         print( f"learning rate set to {learning_rate}")
         learning_rate_flag = False
+    elif model_checkpoint_flag:
+        model_checkpoint = arg
+        model_checkpoint_flag = False
+    elif save_total_limit_flag:
+        save_total_limit = int(arg)
+        save_total_limit_flag = False
     elif arg == "--epoch":
         epoch_flag = True
     elif arg == "--just-tokenizer":
         just_tokenizer = True
     elif arg == "--learning-rate":
         learning_rate_flag = True
+    elif arg == "--model-checkpoint":
+        model_checkpoint_flag = True
+    elif arg == "--save-total-limit":
+        save_total_limit_flag = True
     else:
         print( f"eh? {arg}" )
 
 
-model_checkpoint = 'xlm-roberta-base'
 train_data_csv = 'swahili_cross_6000_trimmed.csv'
 
 selected_column = 'allosaurus_transcript_spaced'
@@ -123,7 +136,7 @@ if not just_tokenizer:
         num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=True,
-        save_total_limit=3,
+        save_total_limit=save_total_limit,
     )
 
     trainer = Trainer(
