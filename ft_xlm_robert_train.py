@@ -144,6 +144,12 @@ if not just_tokenizer:
         weight_decay=0.01,
         push_to_hub=True,
         save_total_limit=save_total_limit,
+
+        
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=8,
+        #gradient_checkpointing=True, 
+        #fp16=True,
     )
 
     trainer = Trainer(
