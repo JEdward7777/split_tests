@@ -53,6 +53,8 @@ train_data_csv = 'swahili_cross_6000_trimmed.csv'
 
 selected_column = 'allosaurus_transcript_spaced'
 
+num_proc = 1 #4
+
 # #model_checkpoint = './xlm-r-finetuned-ner/checkpoint-3'
 # tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, use_fast=False )
 
@@ -102,7 +104,7 @@ if not just_tokenizer:
     tokenized_phonetic_dataset = phonetic_dataset.map(
         preprocess_function,
         batched=True,
-        num_proc=4,
+        num_proc=num_proc,
         remove_columns=phonetic_dataset["train"].column_names,
     )
 
@@ -121,7 +123,7 @@ if not just_tokenizer:
         return result
 
 
-    lm_dataset = tokenized_phonetic_dataset.map(group_texts, batched=True, num_proc=4)
+    lm_dataset = tokenized_phonetic_dataset.map(group_texts, batched=True, num_proc=num_proc)
 
     # pass
 
