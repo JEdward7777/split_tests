@@ -13,6 +13,8 @@ model_checkpoint_flag = False
 just_tokenizer = False
 save_total_limit = 3
 save_total_limit_flag = False
+push_checkpoint = "finetuned-xlm-r-masakhaner-swa-whole-word-phonetic-2"
+push_checkpoint_flag = False
 for arg in sys.argv[1:]:
     if epoch_flag:
         epochs = int(arg)
@@ -28,6 +30,9 @@ for arg in sys.argv[1:]:
     elif save_total_limit_flag:
         save_total_limit = int(arg)
         save_total_limit_flag = False
+    elif push_checkpoint_flag:
+        push_checkpoint = arg
+        push_checkpoint_flag = False
     elif arg == "--epoch":
         epoch_flag = True
     elif arg == "--just-tokenizer":
@@ -38,6 +43,8 @@ for arg in sys.argv[1:]:
         model_checkpoint_flag = True
     elif arg == "--save-total-limit":
         save_total_limit_flag = True
+    elif arg == '--push-checkpoint':
+        push_checkpoint_flag = True
     else:
         print( f"eh? {arg}" )
 
@@ -78,7 +85,7 @@ actual_added_tokens = tokenizer.add_tokens( new_tokens )
 
 
 #also need to push tokenizer.
-tokenizer.push_to_hub("finetuned-xlm-r-masakhaner-swa-whole-word-phonetic")
+tokenizer.push_to_hub(push_checkpoint)
 
 if not just_tokenizer:
 
@@ -129,7 +136,7 @@ if not just_tokenizer:
     #https://huggingface.co/docs/transformers/v4.21.1/en/tasks/language_modeling
 
     training_args = TrainingArguments(
-        'finetuned-xlm-r-masakhaner-swa-whole-word-phonetic',
+        push_checkpoint,
         #output_dir="./results",
         evaluation_strategy="epoch",
         learning_rate=learning_rate,
