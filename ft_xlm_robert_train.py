@@ -150,6 +150,7 @@ if not just_tokenizer:
         gradient_accumulation_steps=8,
         #gradient_checkpointing=True, 
         #fp16=True,
+        prediction_loss_only=True,
     )
 
     trainer = Trainer(
