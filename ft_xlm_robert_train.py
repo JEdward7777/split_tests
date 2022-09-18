@@ -13,7 +13,7 @@ model_checkpoint_flag = False
 just_tokenizer = False
 save_total_limit = 1
 save_total_limit_flag = False
-push_checkpoint = "finetuned-xlm-r-masakhaner-swa-whole-word-phonetic-2"
+push_checkpoint = "2-finetuned-xlm-r-masakhaner-swa-whole-word-phonetic"
 push_checkpoint_flag = False
 for arg in sys.argv[1:]:
     if epoch_flag:
