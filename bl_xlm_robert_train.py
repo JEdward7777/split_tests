@@ -15,6 +15,10 @@ checkpoint_flag = False
 publish = True
 epochs = 20
 model_checkpoint = 'xlm-roberta-base' #"distilbert-base-uncased"
+batch=8
+batch_flag = False
+gradient_accumulation_steps = 1
+gradient_accumulation_steps_flag = False
 print( "start" )
 for arg in sys.argv[1:]:
     if epoch_flag:
@@ -23,12 +27,22 @@ for arg in sys.argv[1:]:
     elif checkpoint_flag:
         model_checkpoint = arg
         checkpoint_flag = False
+    elif batch_flag:
+        batch = int(arg)
+        batch_flag = False
+    elif gradient_accumulation_steps_flag:
+        gradient_accumulation_steps = int(arg)
+        gradient_accumulation_steps_flag = False
     elif arg == "--epoch":
         epoch_flag = True
     elif arg == "--dont-publish":
         publish = False
     elif arg == "--checkpoint":
         checkpoint_flag = True
+    elif arg == '--batch':
+        batch_flag = True
+    elif arg == '--gradient-accumulation-steps':
+        gradient_accumulation_steps_flag = True
     else:
         print( f"eh? {arg}" )
 print( f"end {sys.argv}")
@@ -184,8 +198,8 @@ args = TrainingArguments(
     weight_decay=0.01,
     push_to_hub=publish,
     save_total_limit=3,
-    #per_device_train_batch_size=1,
-    #gradient_accumulation_steps=4*2*2*2*2*2*2*2*2*2*2*2,
+    per_device_train_batch_size=batch,
+    gradient_accumulation_steps=gradient_accumulation_steps,
     #gradient_checkpointing=True, 
     #fp16=True,
 )
