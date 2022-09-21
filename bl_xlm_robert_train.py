@@ -188,7 +188,7 @@ model = AutoModelForTokenClassification.from_pretrained(
 )
 
 
-
+print( f"batch size {batch} gradient_accumulation_steps {gradient_accumulation_steps}")
 args = TrainingArguments(
     "finetuned-xlm-r-masakhaner-swa-ner",
     evaluation_strategy="epoch",
