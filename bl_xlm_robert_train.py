@@ -24,7 +24,7 @@ for arg in sys.argv[1:]:
         model_checkpoint = arg
         checkpoint_flag = False
     elif arg == "--epoch":
-        epock_flag = True
+        epoch_flag = True
     elif arg == "--dont-publish":
         publish = False
     elif arg == "--checkpoint":
