@@ -136,6 +136,8 @@ def parse_single_for_training( from_sentance, to_sentance, num_pre_context_chars
     working_from = from_sentance
     working_to = ""
     used_from = ""
+    continuous_added = 0
+    continuous_dropped = 0
     for thing in trace_list:
         #gather action and context for training
         if thing.action != START:
@@ -148,7 +150,9 @@ def parse_single_for_training( from_sentance, to_sentance, num_pre_context_chars
                 "to_context": to_context,
                 "used_context": used_context,
                 "action": thing.action,
-                "char": thing.char if thing.action == INSERT_TO else ' '
+                "continuous_added": continuous_added,
+                "continuous_dropped": continuous_dropped,
+                "char": thing.char if thing.action == INSERT_TO else ' ',
             })
 
         #now execute the action for the next step.
@@ -156,13 +160,19 @@ def parse_single_for_training( from_sentance, to_sentance, num_pre_context_chars
             pass
         elif thing.action == INSERT_TO:
             working_to += thing.char
+            continuous_added += 1
+            continuous_dropped = 0
         elif thing.action == DELETE_FROM:
             used_from += working_from[0]
             working_from = working_from[1:]
+            continuous_added = 0
+            continuous_dropped += 1
         elif thing.action == MATCH:
             used_from += working_from[0]
             working_to += working_from[0]
             working_from = working_from[1:]
+            continuous_added = 0
+            continuous_dropped = 0
 
     
     if to_sentance != working_to:
@@ -192,6 +202,14 @@ def parse_single_for_training( from_sentance, to_sentance, num_pre_context_chars
         for training in training_collection:
             this_slice.append( training['used_context'][i] )
         context_split_into_dict[ f"u{i}" ] = this_slice
+
+    
+    #now these two things.
+    context_split_into_dict["continuous_added"] = []
+    context_split_into_dict["continuous_dropped"] = []
+    for training in training_collection:
+        context_split_into_dict["continuous_added"].append( training["continuous_added"] )
+        context_split_into_dict["continuous_dropped"].append( training["continuous_dropped"] )
 
     #now also collect the output answers.
     result_split_into_dict = {}
@@ -326,6 +344,8 @@ def do_reconstruct( action_model, char_model, text, quite=False, num_pre_context
     working_from = text
     working_to = ""
     used_from = ""
+    continuous_added = 0
+    continuous_dropped = 0
     while working_from and len(working_to) < 3*len(text) and (len(working_to) < 5 or working_to[-5:] != (working_to[-1] * 5)):
         from_context = (working_from + (" " * num_post_context_chars))[:num_post_context_chars]
         to_context =   ((" " * num_pre_context_chars) + working_to )[-num_pre_context_chars:]
@@ -342,6 +362,10 @@ def do_reconstruct( action_model, char_model, text, quite=False, num_pre_context
         #used_context
         for i in range( num_pre_context_chars ):
             context_as_dictionary[ f"u{i}" ] = [used_context[i]]
+        #these two things.
+        context_as_dictionary["continuous_added"]   = [continuous_added]
+        context_as_dictionary["continuous_dropped"] = [continuous_dropped]
+
         #make it a pandas.
         context_as_pd = pd.DataFrame( context_as_dictionary )
 
@@ -355,13 +379,19 @@ def do_reconstruct( action_model, char_model, text, quite=False, num_pre_context
             char_model_result = char_model.predict( context_as_pd )[0][0]
 
             working_to += char_model_result
+            continuous_added += 1
+            continuous_dropped = 0
         elif action_model_result == DELETE_FROM:
             used_from += working_from[0]
             working_from = working_from[1:]
+            continuous_added = 0
+            continuous_dropped += 1
         elif action_model_result == MATCH:
             used_from += working_from[0]
             working_to += working_from[0]
             working_from = working_from[1:]
+            continuous_added = 0
+            continuous_dropped = 0
 
     return working_to
 
@@ -490,7 +520,8 @@ if __name__ == '__main__':
     #main( 300, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
     #main( 1000, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
     #main( 2001, use_gpu=True, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
-    main( 8001, use_gpu=True, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    #main( 2002, use_gpu=True, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    main( 102, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
 
 #trace_edits( "matokeo ja ut͡ʃaɠuzi mkuu wa nt͡ʃi ja cote ɗe ivoiɾe inajoonɡoza kwa uzaliʃaʄi wa kakao ɗuniani", "matokeo ya uchaguzi mkuu wa nchi ya cote de ivoire inayoongoza kwa uzalishaji wa kakao duniani", print_debug=True )
 #trace_edits( "", "", print_debug=True )
