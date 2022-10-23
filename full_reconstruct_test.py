@@ -221,7 +221,11 @@ def parse_for_training( from_sentances, to_sentances ):
 
     return pd.concat( out_observations_list ), pd.concat( out_results_list )
 
-def train_catboost( X_train,X_test, y_train, y_test, iterations, learning_rate = .07 ):
+def train_catboost( X_train,X_test, y_train, y_test, X, y, iterations, learning_rate = .07, use_gpu=False ):
+    #as we aren't using test, we might as well train on that split data as well.
+    X_train = X
+    y_train = y
+
     X_test_limited = X_test
     y_test_limited = y_test
     X_train = X_train.fillna( ' ' )
@@ -241,7 +245,9 @@ def train_catboost( X_train,X_test, y_train, y_test, iterations, learning_rate =
             validation_pool = None #hack to get around chars being found that aren't allowed.
             model = CatBoostClassifier(
                 iterations = iterations,
-                learning_rate = learning_rate
+                learning_rate = learning_rate,
+                task_type="GPU" if use_gpu else "CPU",
+                devices='0:1' if use_gpu else None
             )
             model.fit( train_pool, eval_set=validation_pool, verbose=True )
             passed = True
@@ -259,7 +265,7 @@ def train_catboost( X_train,X_test, y_train, y_test, iterations, learning_rate =
 
     return model
 
-def split_and_train( X, y, iterations ):
+def split_and_train( X, y, iterations, use_gpu ):
     #split it between train and test.
     X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(
         X,
@@ -273,10 +279,10 @@ def split_and_train( X, y, iterations ):
 
     #train catboost model
     print( "training" )
-    model = train_catboost( X_train,X_test, y_train, y_test, iterations )
+    model = train_catboost( X_train,X_test, y_train, y_test, X, y, iterations, use_gpu=use_gpu )
     return model
 
-def train_reconstruct_models( from_sentances, to_sentances, parse_cache_name_in, parse_cache_name_out, iterations, use_parse_caches ):
+def train_reconstruct_models( from_sentances, to_sentances, parse_cache_name_in, parse_cache_name_out, iterations, use_parse_caches, use_gpu ):
     if not os.path.exists( parse_cache_name_in ) or not use_parse_caches:
         X,Y = parse_for_training( from_sentances, to_sentances )
         X.to_csv( parse_cache_name_in,   index=False )
@@ -286,12 +292,12 @@ def train_reconstruct_models( from_sentances, to_sentances, parse_cache_name_in,
         Y = pd.read_csv( parse_cache_name_out )
 
     #train and save the action_model
-    action_model = split_and_train( X, Y['action'], iterations )
+    action_model = split_and_train( X, Y['action'], iterations, use_gpu=use_gpu )
 
     #and the char model
     #slice through where only the action is insert.
     insert_indexes = Y['action'] == INSERT_TO
-    char_model = split_and_train( X[insert_indexes], Y['char'][insert_indexes], iterations )
+    char_model = split_and_train( X[insert_indexes], Y['char'][insert_indexes], iterations, use_gpu=use_gpu )
 
     return action_model, char_model
 
@@ -378,11 +384,9 @@ def levenshteinDistance(s1, s2):
     return distances[-1]
 
 
-def main(iterations=6000, flush_cache=False):
+def main(iterations=6000, use_gpu=False, flush_cache=False, from_column = 'cleaned_transcript_epitran', to_column = 'cleaned_transcript' ):
     data_filename = './data/ALFFA_dataset_ allosaurus vs epitran.csv'
-    from_column = 'cleaned_transcript_epitran'
-    to_column = 'cleaned_transcript'
-
+    
     print( "loading csv" )
     full_data = pd.read_csv( data_filename )
 
@@ -409,6 +413,7 @@ def main(iterations=6000, flush_cache=False):
                 parse_cache_name_in = parse_cache_name_in,
                 parse_cache_name_out = parse_cache_name_out, 
                 iterations = iterations,
+                use_gpu = use_gpu,
                 use_parse_caches = not flush_cache )
 
         action_model.save_model( action_model_name )
@@ -473,13 +478,19 @@ def gradio_demo(iterations):
     demo.launch( share=False )
 
 if __name__ == '__main__':
-    main(100, False )
-    main(200, False )
+    # main(100, False )
+    # main(200, False )
     # main(1000, False )
     # main(2000, False )
     # main(4000, False )
     # main(8000, False )
     #gradio_demo(8000)
+
+    #main( 100, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    #main( 300, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    #main( 1000, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    #main( 2001, use_gpu=True, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
+    main( 8001, use_gpu=True, flush_cache=True, from_column='allosaurus_transcript_no_spaces', to_column='cleaned_transcript_epitran')
 
 #trace_edits( "matokeo ja ut͡ʃaɠuzi mkuu wa nt͡ʃi ja cote ɗe ivoiɾe inajoonɡoza kwa uzaliʃaʄi wa kakao ɗuniani", "matokeo ya uchaguzi mkuu wa nchi ya cote de ivoire inayoongoza kwa uzalishaji wa kakao duniani", print_debug=True )
 #trace_edits( "", "", print_debug=True )
